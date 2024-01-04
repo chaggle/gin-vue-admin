@@ -6,6 +6,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"net"
 )
 
 type JwtApi struct{}
@@ -19,10 +20,15 @@ type JwtApi struct{}
 // @Success   200  {object}  response.Response{msg=string}  "jwt加入黑名单"
 // @Router    /jwt/jsonInBlacklist [post]
 func (j *JwtApi) JsonInBlacklist(c *gin.Context) {
+	host, _, nerr := net.SplitHostPort(c.Request.Host)
+	if nerr != nil {
+		host = c.Request.Host
+	}
 	token, _ := c.Cookie("x-token")
 	if token == "" {
 		token = c.Request.Header.Get("x-token")
 	}
+	c.SetCookie("x-token", "", -1, "/", host, false, true)
 	jwt := system.JwtBlacklist{Jwt: token}
 	err := jwtService.JsonInBlacklist(jwt)
 	if err != nil {
